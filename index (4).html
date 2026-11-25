@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Звуковые схемы слов из кружочков — Краинская Ирина Александровна</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100dvh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f0f6fc;
+    color: #1e293b;
+  }
+  .app-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 1120px;
+    margin: 0 auto;
+    background: #f0f6fc;
+  }
+  .top-dock {
+    flex-shrink: 0;
+    background: #ffffff;
+    border-bottom: 2px solid #cbd5e1;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    padding: 8px 12px 10px;
+    z-index: 20;
+  }
+  .header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-bottom: 6px;
+  }
+  .title-block h1 {
+    margin: 0;
+    font-size: clamp(16px, 2.6vw, 21px);
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+  .author-badge {
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: #475569;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-pill {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #bae6fd;
+  }
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
+  }
+  .btn:active {
+    transform: scale(0.96);
+  }
+  .btn-primary {
+    background: #0284c7;
+    color: #ffffff;
+  }
+  .btn-secondary {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+  }
+  .legend-box {
+    display: none;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .legend-box.open {
+    display: flex;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+  }
+  .dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,0.2);
+  }
+  .dot-sm {
+    width: 14px;
+    height: 14px;
+  }
+  .dot-blue { background: #2563eb; border: 2px solid #1d4ed8; }
+  .dot-green { background: #16a34a; border: 2px solid #15803d; }
+  .dot-red { background: #ef4444; border: 2px solid #dc2626; }
+
+  .palette-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 5px;
+  }
+  .palette-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tile-card {
+    background: #ffffff;
+    border: 2.5px solid #94a3b8;
+    border-radius: 12px;
+    padding: 7px 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    min-height: 44px;
+    min-width: 48px;
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.07);
+    transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .tile-card:hover {
+    border-color: #0284c7;
+  }
+  .tile-card.selected {
+    border-color: #0284c7;
+    background: #e0f2fe;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 5px 12px rgba(2, 132, 199, 0.25);
+  }
+
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .words-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(295px, 1fr));
+    gap: 12px;
+    padding-bottom: 16px;
+  }
+  .word-card {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .word-card.completed {
+    border-color: #22c55e;
+    background: #f0fdf4;
+  }
+  .word-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .pic-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .word-title {
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    color: #0f172a;
+    text-transform: uppercase;
+  }
+  .slots-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .slot-box {
+    min-width: 52px;
+    height: 46px;
+    padding: 4px 8px;
+    border: 2.5px dashed #94a3b8;
+    border-radius: 11px;
+    background: #f8fafc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+  .slot-box.drag-over {
+    border-color: #0284c7;
+    background: #e0f2fe;
+  }
+  .slot-box.filled {
+    border-style: solid;
+    border-color: #22c55e;
+    background: #ffffff;
+    cursor: default;
+  }
+  .slot-placeholder {
+    color: #94a3b8;
+    font-weight: 800;
+    font-size: 16px;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-4px); }
+  }
+  .slot-box.wrong {
+    border-color: #ef4444;
+    background: #fef2f2;
+    animation: shake 0.32s ease;
+  }
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    padding: 8px 4px 18px;
+  }
+  .win-banner {
+    display: none;
+    background: #dcfce7;
+    border: 2px solid #22c55e;
+    color: #14532d;
+    border-radius: 14px;
+    padding: 12px 16px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  .win-banner.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="top-dock">
+    <div class="header-row">
+      <div class="title-block">
+        <h1>Подбери звуковую схему к слову</h1>
+        <div class="author-badge">Автор игры: Краинская Ирина Александровна, педагог дополнительного образования</div>
+      </div>
+      <div class="controls-row">
+        <span class="score-pill" id="scorePill">Собрано: 0 из 27</span>
+        <button class="btn btn-secondary" id="toggleLegendBtn" type="button">Памятка цветов</button>
+        <button class="btn btn-secondary" id="shuffleBtn" type="button">Перемешать</button>
+        <button class="btn btn-primary" id="resetBtn" type="button">Начать заново</button>
+      </div>
+    </div>
+
+    <div class="legend-box" id="legendBox">
+      <span class="legend-item"><span class="dot dot-sm dot-red"></span> Гласный звук</span>
+      <span class="legend-item"><span class="dot dot-sm dot-blue"></span> Твёрдый согласный звук</span>
+      <span class="legend-item"><span class="dot dot-sm dot-green"></span> Мягкий согласный звук</span>
+      <span class="legend-item"><span class="dot dot-sm dot-blue"></span><span class="dot dot-sm dot-red"></span> Слияние твёрдого согласного с гласным</span>
+      <span class="legend-item"><span class="dot dot-sm dot-green"></span><span class="dot dot-sm dot-red"></span> Слияние мягкого согласного с гласным</span>
+    </div>
+
+    <div class="palette-label">Выбери карточку со звуками (нажми или перетащи в пустое окошко слова):</div>
+    <div class="palette-grid" id="paletteGrid"></div>
+  </div>
+
+  <div class="scroll-area" id="scrollArea">
+    <div class="win-banner" id="winBanner">Молодец! Все звуковые схемы слов собраны правильно!</div>
+    <div class="words-grid" id="wordsGrid"></div>
+    <div class="footer-note">Автор интерактивной игры: Краинская Ирина Александровна, педагог дополнительного образования</div>
+  </div>
+</div>
+
+<script>
+const TILES = [
+  { id: 'BR', dots: ['blue', 'red'], label: 'Синий и красный кружочки' },
+  { id: 'GR', dots: ['green', 'red'], label: 'Зелёный и красный кружочки' },
+  { id: 'G',  dots: ['green'], label: 'Один зелёный кружочек' },
+  { id: 'B',  dots: ['blue'], label: 'Один синий кружочек' },
+  { id: 'R',  dots: ['red'], label: 'Один красный кружочек' }
+];
+
+const SVGS = {
+  vafli: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <rect x="12" y="14" width="40" height="36" rx="6" fill="#f59e0b" stroke="#b45309" stroke-width="2.5"/>
+    <path d="M12 24H52M12 32H52M12 40H52M22 14V50M32 14V50M42 14V50" stroke="#fde68a" stroke-width="2"/>
+  </svg>`,
+  vagon: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <rect x="8" y="18" width="48" height="26" rx="4" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2.5"/>
+    <rect x="13" y="23" width="10" height="9" rx="1.5" fill="#e0f2fe"/>
+    <rect x="27" y="23" width="10" height="9" rx="1.5" fill="#e0f2fe"/>
+    <rect x="41" y="23" width="10" height="9" rx="1.5" fill="#e0f2fe"/>
+    <circle cx="18" cy="48" r="5" fill="#334155"/><circle cx="46" cy="48" r="5" fill="#334155"/>
+    <line x1="4" y1="53" x2="60" y2="53" stroke="#64748b" stroke-width="2.5"/>
+  </svg>`,
+  fazan: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M8 42 Q22 36 30 34" stroke="#b45309" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <ellipse cx="34" cy="34" rx="11" ry="8" fill="#d97706"/>
+    <circle cx="44" cy="22" r="5.5" fill="#15803d"/>
+    <polygon points="49,21 56,23 49,25" fill="#facc15"/>
+    <circle cx="45" cy="21" r="1.2" fill="#0f172a"/>
+    <path d="M31 41V50M37 41V50" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+  fufaika: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M22 14 L10 24 L15 32 L21 27 L21 50 L43 50 L43 27 L49 32 L54 24 L42 14 Q32 19 22 14 Z" fill="#0ea5e9" stroke="#0369a1" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="32" y1="17" x2="32" y2="50" stroke="#0369a1" stroke-width="2"/>
+    <line x1="21" y1="28" x2="43" y2="28" stroke="#bae6fd" stroke-width="1.8"/>
+    <line x1="21" y1="38" x2="43" y2="38" stroke="#bae6fd" stroke-width="1.8"/>
+  </svg>`,
+  kolosok: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <line x1="32" y1="56" x2="32" y2="12" stroke="#ca8a04" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="26" cy="40" rx="4" ry="6" transform="rotate(-30 26 40)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="38" cy="40" rx="4" ry="6" transform="rotate(30 38 40)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="26" cy="29" rx="4" ry="6" transform="rotate(-30 26 29)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="38" cy="29" rx="4" ry="6" transform="rotate(30 38 29)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="27" cy="18" rx="3.5" ry="5.5" transform="rotate(-25 27 18)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+    <ellipse cx="37" cy="18" rx="3.5" ry="5.5" transform="rotate(25 37 18)" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+  </svg>`,
+  lavka: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <rect x="10" y="20" width="44" height="7" rx="2" fill="#d97706" stroke="#92400e" stroke-width="2"/>
+    <rect x="8" y="33" width="48" height="7" rx="2" fill="#f59e0b" stroke="#92400e" stroke-width="2"/>
+    <line x1="15" y1="27" x2="15" y2="52" stroke="#78350f" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="49" y1="27" x2="49" y2="52" stroke="#78350f" stroke-width="3.5" stroke-linecap="round"/>
+  </svg>`,
+  sova: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <ellipse cx="32" cy="36" rx="15" ry="18" fill="#92400e"/>
+    <ellipse cx="32" cy="40" rx="10" ry="11" fill="#fde68a"/>
+    <circle cx="26" cy="25" r="5.5" fill="#ffffff" stroke="#78350f" stroke-width="1.5"/>
+    <circle cx="38" cy="25" r="5.5" fill="#ffffff" stroke="#78350f" stroke-width="1.5"/>
+    <circle cx="26" cy="25" r="2.2" fill="#0f172a"/>
+    <circle cx="38" cy="25" r="2.2" fill="#0f172a"/>
+    <polygon points="30,29 34,29 32,34" fill="#f59e0b"/>
+    <polygon points="20,18 24,21 21,23" fill="#78350f"/>
+    <polygon points="44,18 40,21 43,23" fill="#78350f"/>
+  </svg>`,
+  iva: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <rect x="29" y="34" width="6" height="22" fill="#854d0e"/>
+    <path d="M14 38 Q16 14 32 14 Q48 14 50 38" fill="#4ade80" stroke="#16a34a" stroke-width="2.5"/>
+    <path d="M18 24 Q16 38 15 48M25 22 Q24 38 23 48M39 22 Q40 38 41 48M46 24 Q48 38 49 48" stroke="#15803d" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  </svg>`,
+  sumka: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M23 24 V18 A9 9 0 0 1 41 18 V24" fill="none" stroke="#92400e" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="13" y="23" width="38" height="29" rx="6" fill="#ec4899" stroke="#be185d" stroke-width="2.5"/>
+    <path d="M13 33 Q32 40 51 33" fill="none" stroke="#be185d" stroke-width="2.5"/>
+    <circle cx="32" cy="36" r="3" fill="#fde047"/>
+  </svg>`,
+  malina: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M32 16 Q22 10 18 16 Q24 21 32 18 Q40 21 46 16 Q42 10 32 16 Z" fill="#16a34a"/>
+    <circle cx="26" cy="25" r="6" fill="#e11d48"/><circle cx="38" cy="25" r="6" fill="#e11d48"/>
+    <circle cx="22" cy="34" r="6" fill="#f43f5e"/><circle cx="32" cy="34" r="6" fill="#e11d48"/><circle cx="42" cy="34" r="6" fill="#f43f5e"/>
+    <circle cx="26" cy="43" r="6" fill="#e11d48"/><circle cx="38" cy="43" r="6" fill="#e11d48"/>
+    <circle cx="32" cy="50" r="6" fill="#be123c"/>
+  </svg>`,
+  huligan: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <circle cx="32" cy="35" r="16" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/>
+    <path d="M17 26 Q32 14 47 26 Z" fill="#2563eb"/>
+    <path d="M38 24 L54 21 L44 27 Z" fill="#1d4ed8"/>
+    <circle cx="27" cy="34" r="2.2" fill="#0f172a"/><circle cx="37" cy="34" r="2.2" fill="#0f172a"/>
+    <path d="M26 42 Q33 46 39 40" fill="none" stroke="#9a3412" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+  mak: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <line x1="32" y1="34" x2="32" y2="56" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="25" cy="22" r="9" fill="#ef4444"/><circle cx="39" cy="22" r="9" fill="#ef4444"/>
+    <circle cx="25" cy="32" r="9" fill="#dc2626"/><circle cx="39" cy="32" r="9" fill="#dc2626"/>
+    <circle cx="32" cy="27" r="5" fill="#1e293b"/>
+  </svg>`,
+  myach: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <circle cx="32" cy="32" r="21" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2.5"/>
+    <path d="M13 24 Q32 34 51 24" fill="none" stroke="#facc15" stroke-width="4"/>
+    <path d="M13 40 Q32 30 51 40" fill="none" stroke="#ef4444" stroke-width="4"/>
+  </svg>`,
+  kit: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M10 38 Q12 22 34 22 Q48 22 52 34 L58 26 L56 38 L58 46 L50 40 Q38 48 16 44 Q10 43 10 38 Z" fill="#0284c7"/>
+    <path d="M32 22 V12 M32 14 Q26 9 23 13 M32 14 Q38 9 41 13" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="20" cy="34" r="2" fill="#ffffff"/>
+  </svg>`,
+  kot: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <polygon points="16,26 19,12 28,21" fill="#f97316"/>
+    <polygon points="48,26 45,12 36,21" fill="#f97316"/>
+    <circle cx="32" cy="35" r="17" fill="#fb923c"/>
+    <circle cx="26" cy="32" r="2.5" fill="#0f172a"/><circle cx="38" cy="32" r="2.5" fill="#0f172a"/>
+    <polygon points="30,37 34,37 32,40" fill="#ec4899"/>
+    <path d="M10 36 H21 M10 40 H21 M43 36 H54 M43 40 H54" stroke="#7c2d12" stroke-width="1.8"/>
+  </svg>`,
+  lyuk: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <circle cx="32" cy="32" r="21" fill="#475569" stroke="#1e293b" stroke-width="3"/>
+    <circle cx="32" cy="32" r="15" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5 3"/>
+    <line x1="20" y1="32" x2="44" y2="32" stroke="#cbd5e1" stroke-width="2.5"/>
+    <line x1="32" y1="20" x2="32" y2="44" stroke="#cbd5e1" stroke-width="2.5"/>
+  </svg>`,
+  luk: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M29 22 L24 10 M32 22 L32 8 M35 22 L40 10" stroke="#16a34a" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="32" cy="37" rx="15" ry="16" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+    <path d="M26 23 Q23 37 26 52 M38 23 Q41 37 38 52" fill="none" stroke="#d97706" stroke-width="1.8"/>
+  </svg>`,
+  les: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <rect x="21" y="42" width="4" height="12" fill="#78350f"/>
+    <polygon points="23,14 11,32 35,32" fill="#16a34a"/>
+    <polygon points="23,24 9,44 37,44" fill="#15803d"/>
+    <rect x="42" y="44" width="4" height="10" fill="#78350f"/>
+    <polygon points="44,20 34,35 54,35" fill="#22c55e"/>
+    <polygon points="44,29 32,45 56,45" fill="#16a34a"/>
+  </svg>`,
+  syr: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <polygon points="10,44 52,44 46,20" fill="#facc15" stroke="#ca8a04" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="36" cy="36" r="3.5" fill="#ca8a04"/>
+    <circle cx="25" cy="39" r="2.5" fill="#ca8a04"/>
+    <circle cx="43" cy="29" r="2" fill="#ca8a04"/>
+  </svg>`,
+  lisa: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <polygon points="15,28 18,12 28,22" fill="#ea580c"/>
+    <polygon points="49,28 46,12 36,22" fill="#ea580c"/>
+    <polygon points="14,28 50,28 32,50" fill="#f97316"/>
+    <polygon points="22,36 42,36 32,50" fill="#ffffff"/>
+    <circle cx="26" cy="30" r="2.2" fill="#0f172a"/><circle cx="38" cy="30" r="2.2" fill="#0f172a"/>
+    <circle cx="32" cy="48" r="2.8" fill="#0f172a"/>
+  </svg>`,
+  luna: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M38 12 A20 20 0 1 0 50 46 A16 16 0 1 1 38 12 Z" fill="#facc15" stroke="#eab308" stroke-width="2"/>
+  </svg>`,
+  ryba: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <ellipse cx="30" cy="32" rx="18" ry="11" fill="#06b6d4" stroke="#0e7490" stroke-width="2"/>
+    <polygon points="47,32 58,22 58,42" fill="#0284c7"/>
+    <circle cx="20" cy="29" r="2.2" fill="#0f172a"/>
+  </svg>`,
+  zima: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <g stroke="#0284c7" stroke-width="3" stroke-linecap="round">
+      <line x1="32" y1="10" x2="32" y2="54"/>
+      <line x1="13" y1="21" x2="51" y2="43"/>
+      <line x1="51" y1="21" x2="13" y2="43"/>
+    </g>
+    <circle cx="32" cy="32" r="5" fill="#bae6fd" stroke="#0284c7" stroke-width="2.5"/>
+  </svg>`,
+  chai: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <path d="M16 26 H44 V38 A12 12 0 0 1 32 50 H28 A12 12 0 0 1 16 38 Z" fill="#ef4444" stroke="#b91c1c" stroke-width="2"/>
+    <path d="M44 29 H49 A5 5 0 0 1 49 39 H44" fill="none" stroke="#b91c1c" stroke-width="3"/>
+    <path d="M24 20 Q22 15 25 11 M32 20 Q30 15 33 11" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+  utka: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <ellipse cx="32" cy="40" rx="17" ry="11" fill="#facc15"/>
+    <circle cx="23" cy="24" r="8" fill="#facc15"/>
+    <polygon points="10,24 16,22 16,27" fill="#f97316"/>
+    <circle cx="21" cy="22" r="1.8" fill="#0f172a"/>
+  </svg>`,
+  aist: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <ellipse cx="34" cy="32" rx="13" ry="9" fill="#ffffff" stroke="#64748b" stroke-width="2"/>
+    <path d="M24 28 Q20 18 24 14" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="24" cy="14" r="4" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+    <polygon points="10,14 20,13 20,16" fill="#ef4444"/>
+    <line x1="32" y1="41" x2="32" y2="54" stroke="#ef4444" stroke-width="2.5"/>
+    <line x1="37" y1="41" x2="37" y2="54" stroke="#ef4444" stroke-width="2.5"/>
+  </svg>`,
+  slon: `<svg viewBox="0 0 64 64" width="52" height="52">
+    <ellipse cx="35" cy="34" rx="15" ry="12" fill="#94a3b8"/>
+    <circle cx="22" cy="28" r="9" fill="#94a3b8"/>
+    <path d="M14 30 Q8 34 10 42" fill="none" stroke="#64748b" stroke-width="4.5" stroke-linecap="round"/>
+    <rect x="26" y="42" width="5" height="10" rx="2" fill="#64748b"/>
+    <rect x="39" y="42" width="5" height="10" rx="2" fill="#64748b"/>
+    <circle cx="20" cy="26" r="1.8" fill="#0f172a"/>
+  </svg>`
+};
+
+// Схемы составлены строго из 5 заданных карточек:
+// BR (синий+красный), GR (зелёный+красный), G (зелёный), B (синий), R (красный)
+const WORDS_DATA = [
+  { word: 'ВАФЛИ',   svg: 'vafli',   slots: ['BR', 'B', 'GR'] },
+  { word: 'ВАГОН',   svg: 'vagon',   slots: ['BR', 'BR', 'B'] },
+  { word: 'ФАЗАН',   svg: 'fazan',   slots: ['BR', 'BR', 'B'] },
+  { word: 'ФУФАЙКА', svg: 'fufaika', slots: ['BR', 'BR', 'G', 'BR'] },
+  { word: 'КОЛОСОК', svg: 'kolosok', slots: ['BR', 'BR', 'BR', 'B'] },
+  { word: 'ЛАВКА',   svg: 'lavka',   slots: ['BR', 'B', 'BR'] },
+  { word: 'СОВА',    svg: 'sova',    slots: ['BR', 'BR'] },
+  { word: 'ИВА',     svg: 'iva',     slots: ['R', 'BR'] },
+  { word: 'СУМКА',   svg: 'sumka',   slots: ['BR', 'B', 'BR'] },
+  { word: 'МАЛИНА',  svg: 'malina',  slots: ['BR', 'GR', 'BR'] },
+  { word: 'ХУЛИГАН', svg: 'huligan', slots: ['BR', 'GR', 'BR', 'B'] },
+  { word: 'МАК',     svg: 'mak',     slots: ['BR', 'B'] },
+  { word: 'МЯЧ',    svg: 'myach',   slots: ['GR', 'G'] },
+  { word: 'КИТ',     svg: 'kit',     slots: ['GR', 'B'] },
+  { word: 'КОТ',     svg: 'kot',     slots: ['BR', 'B'] },
+  { word: 'ЛЮК',     svg: 'lyuk',    slots: ['GR', 'B'] },
+  { word: 'ЛУК',     svg: 'luk',     slots: ['BR', 'B'] },
+  { word: 'ЛЕС',     svg: 'les',     slots: ['GR', 'B'] },
+  { word: 'СЫР',     svg: 'syr',     slots: ['BR', 'B'] },
+  { word: 'ЛИСА',    svg: 'lisa',    slots: ['GR', 'BR'] },
+  { word: 'ЛУНА',    svg: 'luna',    slots: ['BR', 'BR'] },
+  { word: 'РЫБА',    svg: 'ryba',    slots: ['BR', 'BR'] },
+  { word: 'ЗИМА',    svg: 'zima',    slots: ['GR', 'BR'] },
+  { word: 'ЧАЙ',     svg: 'chai',    slots: ['GR', 'G'] },
+  { word: 'УТКА',    svg: 'utka',    slots: ['R', 'B', 'BR'] },
+  { word: 'АИСТ',    svg: 'aist',    slots: ['R', 'R', 'B', 'B'] },
+  { word: 'СЛОН',    svg: 'slon',    slots: ['B', 'BR', 'B'] }
+];
+
+let selectedTileId = null;
+let currentWords = [];
+let completedCount = 0;
+
+const paletteGrid = document.getElementById('paletteGrid');
+const wordsGrid = document.getElementById('wordsGrid');
+const scorePill = document.getElementById('scorePill');
+const winBanner = document.getElementById('winBanner');
+const legendBox = document.getElementById('legendBox');
+
+function renderDotsHTML(tileId) {
+  const tile = TILES.find(t => t.id === tileId);
+  if (!tile) return '';
+  return tile.dots.map(color => `<span class="dot dot-${color}"></span>`).join('');
+}
+
+function buildPalette() {
+  paletteGrid.innerHTML = '';
+  TILES.forEach(tile => {
+    const el = document.createElement('div');
+    el.className = 'tile-card';
+    el.dataset.tileId = tile.id;
+    el.title = tile.label;
+    el.draggable = true;
+    el.innerHTML = renderDotsHTML(tile.id);
+
+    el.addEventListener('click', () => {
+      if (selectedTileId === tile.id) {
+        selectedTileId = null;
+      } else {
+        selectedTileId = tile.id;
+      }
+      updatePaletteSelection();
+    });
+
+    el.addEventListener('dragstart', e => {
+      selectedTileId = tile.id;
+      updatePaletteSelection();
+      e.dataTransfer.setData('text/plain', tile.id);
+    });
+
+    paletteGrid.appendChild(el);
+  });
+}
+
+function updatePaletteSelection() {
+  document.querySelectorAll('.tile-card').forEach(el => {
+    el.classList.toggle('selected', el.dataset.tileId === selectedTileId);
+  });
+}
+
+function updateScore() {
+  scorePill.textContent = `Собрано: ${completedCount} из ${currentWords.length}`;
+  winBanner.classList.toggle('show', completedCount === currentWords.length && currentWords.length > 0);
+}
+
+function handleSlotAttempt(slotEl, chosenTileId) {
+  if (!chosenTileId || slotEl.classList.contains('filled')) return;
+  const expected = slotEl.dataset.expected;
+  if (chosenTileId === expected) {
+    slotEl.classList.remove('wrong');
+    slotEl.classList.add('filled');
+    slotEl.innerHTML = renderDotsHTML(chosenTileId);
+
+    const card = slotEl.closest('.word-card');
+    const remaining = card.querySelectorAll('.slot-box:not(.filled)').length;
+    if (remaining === 0 && !card.classList.contains('completed')) {
+      card.classList.add('completed');
+      completedCount++;
+      updateScore();
+    }
+  } else {
+    slotEl.classList.remove('wrong');
+    void slotEl.offsetWidth;
+    slotEl.classList.add('wrong');
+    setTimeout(() => slotEl.classList.remove('wrong'), 400);
+  }
+}
+
+function buildWords() {
+  wordsGrid.innerHTML = '';
+  completedCount = 0;
+  updateScore();
+
+  currentWords.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+
+    const slotsHTML = item.slots.map((expectedId, idx) => `
+      <div class="slot-box" data-expected="${expectedId}" data-idx="${idx}">
+        <span class="slot-placeholder">?</span>
+      </div>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="word-top">
+        <div class="pic-box">${SVGS[item.svg] || ''}</div>
+        <div class="word-title">${item.word}</div>
+      </div>
+      <div class="slots-row">${slotsHTML}</div>
+    `;
+
+    card.querySelectorAll('.slot-box').forEach(slotEl => {
+      slotEl.addEventListener('click', () => {
+        if (selectedTileId) {
+          handleSlotAttempt(slotEl, selectedTileId);
+        }
+      });
+
+      slotEl.addEventListener('dragover', e => {
+        e.preventDefault();
+        if (!slotEl.classList.contains('filled')) {
+          slotEl.classList.add('drag-over');
+        }
+      });
+
+      slotEl.addEventListener('dragleave', () => {
+        slotEl.classList.remove('drag-over');
+      });
+
+      slotEl.addEventListener('drop', e => {
+        e.preventDefault();
+        slotEl.classList.remove('drag-over');
+        const droppedId = e.dataTransfer.getData('text/plain') || selectedTileId;
+        handleSlotAttempt(slotEl, droppedId);
+      });
+    });
+
+    wordsGrid.appendChild(card);
+  });
+}
+
+document.getElementById('toggleLegendBtn').addEventListener('click', () => {
+  legendBox.classList.toggle('open');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  buildWords();
+  document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', () => {
+  currentWords = [...WORDS_DATA].sort(() => Math.random() - 0.5);
+  buildWords();
+  document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+currentWords = [...WORDS_DATA];
+buildPalette();
+buildWords();
+</script>
+</body>
+</html>
